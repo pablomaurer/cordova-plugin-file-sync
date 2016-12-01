@@ -1,6 +1,8 @@
 # cordova-plugin-file-sync
 This plugin does just sync files comparing a `manifest.json` to find out changed files. Then it downloads or deletes changed files.
 
+Currently only IOS is implemented. Feel free to do the Android implementation.
+
 ### installation
 ```sh
 // stable
@@ -99,33 +101,36 @@ So to create your absolute pathes on js side you could do:
 // using cordova-plugin-file
 resolveLocalFileSystemURL('cdvfile://localhost/library/Application Support/cordova-plugin-file-sync', function(entry) {
     console.log('library: ' + entry.toURL());
-// file:///Users/pm/Library/Developer/CoreSimulator/Devices/DE63B068-9AFF-4803-99EC-CF1E5D6B1A1E/data/Containers/Data/Application/2B0CE97F-797F-4A12-A7CF-30B1EAB3C39E/Library/Application Support/cordova-plugin-file-sync
+// file:///Users/pm/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<UDID>/Library/Application Support/cordova-plugin-file-sync
 });
 ```
 ### Todo
 Altough there are todo's this plugin is `production ready`, altough I never used it with a app in the appstore apple will may find something that isn't alright so I would be happy about feedback if it worked or not.
 
-Also since it's swift it's a bit more beginner friendly and I'm here for helping you, when you try to contribute. 
+Also since it's swift it's a bit more beginner friendly and I'm here for helping you, when you try to contribute.
+
 **Core Features:**
-[x] download files 
-[x] remove files
-[ ] upload files via http -> so you have to make probably a php script to recieve the file (is it possible to save files to  `Application Support folder?`)
+- [x] download files 
+- [x] remove files
+- [ ] upload files via http -> so you have to make probably a php script to recieve the file (is it possible to save files to  `Application Support folder?`)
+
 **Feature:**
-[ ] Sending progress event (find other plugin to see how / cordova-content-sync-plugin maybe?)
-[ ] something like cronjobs
-[ ] Event / or Function which returns current status of plugin `working`, `finish` or whatever, will be more usefull when there is also something like a cronjob.
-[ ] resume download if you where aborted, due to exit. background doesn't matter, because the download would still go on.
-[ ] ftp implemenation try https://github.com/Constantine-Fry/rebekka
-[ ] webdav implemenation
-[ ] optional comparing `release.json`
-[ ] return more for example: numUploadedFiles, numDownloadedFiles, numDeletedFiles, newVersion,  oldVersion. more ideas?
+- [ ] Sending progress event (find other plugin to see how / cordova-content-sync-plugin maybe?)
+- [ ] something like cronjobs
+- [ ] Event / or Function which returns current status of plugin `working`, `finish` or whatever, will be more usefull when there is also something like a cronjob.
+- [ ] resume download if you where aborted, due to exit. background doesn't matter, because the download would still go on.
+- [ ] ftp implemenation try https://github.com/Constantine-Fry/rebekka
+- [ ] webdav implemenation
+- [ ] optional comparing `release.json`
+- [ ] return more for example: numUploadedFiles, numDownloadedFiles, numDeletedFiles, newVersion,  oldVersion. more ideas?
+
 **Qualtiy:**
-[ ] Error handling in Downloader
-[ ] currently the most errors are just surrounded with if else but not returned
-[ ] migrate to swift 3
-[ ] avoid conflicts with other plugins using for every class a named prefix
-[ ] instead of returning status via int, use enum/constants like [chcp errors](https://github.com/nordnet/cordova-hot-code-push/wiki/Error-codes)
-[ ] what/which code is causing the thread warning of 15ms?
+- [ ] Error handling in Downloader
+- [ ] currently the most errors are just surrounded with if else but not returned
+- [ ] migrate to swift 3
+- [ ] avoid conflicts with other plugins using for every class a named prefix
+- [ ] instead of returning status via int, use enum/constants like [chcp errors](https://github.com/nordnet/cordova-hot-code-push/wiki/Error-codes)
+- [ ] what/which code is causing the thread warning of 15ms?
 
 ### Feelings and why swift? :P 
 Because i had no idea of `Obj-c` but the syntax looked really strange I wanted instead to try out `swift`. For me starting native developmen `swift` had a bit a easier syntax but it seems not so complete and there are less libs available. Also I really hate to use `callback` instead `js like promises`, altough there are libs for that available, I didn't want to use them in such a small project.
