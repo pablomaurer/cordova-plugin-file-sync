@@ -1,0 +1,31 @@
+{
+  "name": "cordova-plugin-file-sync",
+  "version": "0.1.0",
+  "description": "cordova plugin to sync files from remote server to ios via manifest comparing",
+  "main": "echo \"Error: This is a cordova plugin, no need to run this via npm ;) \" && exit 1",
+  "cordova": {
+    "id": "cordova-plugin-file-sync",
+    "platforms": [
+      "ios"
+    ]
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mnewmedia/cordova-plugin-file-sync.git"
+  },
+  "keywords": [
+    "cordova",
+    "cordova-plugin",
+    "sync",
+    "download"
+  ],
+  "author": "Pablo Maurer",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/mnewmedia/cordova-plugin-file-sync/issues"
+  },
+  "homepage": "https://github.com/mnewmedia/cordova-plugin-file-sync"
+}
