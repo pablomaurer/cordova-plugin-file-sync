@@ -4,50 +4,65 @@
  */
 class Downloader: NSObject, NSURLSessionDownloadDelegate {
 
-    private let sessionConfig: NSURLSessionConfiguration = NSURLSessionConfiguration.backgroundSessionConfigurationWithIdentifier("com.amanninformatik.ner.backgroundLoader")
-    private var session: NSURLSession?
+    // http://stackoverflow.com/questions/40920912/why-previous-finish-of-download-fires-after-stop-app-and-running-again?noredirect=1#comment69055651_40920912
+    private var sessionConfig: NSURLSessionConfiguration? = nil
+    private var session: NSURLSession? = nil
 
-    private var filesToDownload: NSMutableArray = []
-    private let startedDownloads: NSMutableArray = []
+    private var finishedDownloads: [FSDownload] = []
+    private var startedDownloads: [FSDownload] = []
     private var cb: (result: Int) -> Void = { arg in }
 
-
+    // ---------------------
     // singleton
+    // ---------------------
     private override init() {}
+
     internal static func Instance() -> Downloader {
         return instance
     }
     static let instance : Downloader = Downloader()
 
-    // init session only once
-    private func getSession() -> NSURLSession {
-        if (session != nil) {
-            return self.session!
-        } else {
-            self.session = NSURLSession(configuration: self.sessionConfig, delegate: self, delegateQueue: nil)
-            return self.session!
-        }
+    internal func setup() {
+        // launch when done in background
+        self.sessionConfig = NSURLSessionConfiguration.backgroundSessionConfigurationWithIdentifier("com.amanninformatik.ner.backgroundLoader")
+        self.sessionConfig!.sessionSendsLaunchEvents = true
+        self.session = NSURLSession(configuration: self.sessionConfig!, delegate: self, delegateQueue: nil)
     }
 
+    // ---------------------
+    // handle download events
+    // ---------------------
     //is called once the download is complete
     internal func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didFinishDownloadingToURL location: NSURL) {
 
-        // find matching manifestObject through finished downloadTask and use it to generate path
-        let indexDownloadTask = self.startedDownloads.indexOfObjectIdenticalTo(downloadTask.originalRequest!)
-        let listItem = self.filesToDownload.objectAtIndex(indexDownloadTask)
+        let index = self.getIndexOfActiveDownload(downloadTask)
+        print("[FileSync] active downloads", self.startedDownloads.count)
 
-        // move file
-        FileSystem.Instance().moveToRoot(location, relativeTo: listItem["file"] as! String)
+        // move finished downloads
+        if index != nil {
+            let download = self.startedDownloads[index!]
+            FileSystem.Instance().moveToRoot(location, relativeTo: download.localPath)
 
-        // remove downloadTask and matching item in filesToDownload to enshure the indexes of both array still matches
-        self.startedDownloads.removeObjectAtIndex(indexDownloadTask)
-        self.filesToDownload.removeObjectAtIndex(indexDownloadTask)
-        print("Remaining Downloads: ", self.startedDownloads)
+            self.finishedDownloads.append(download)
+            self.startedDownloads.removeAtIndex(index!)
+        } else {
+            print("[FileSync] fs-download not found in list", downloadTask.originalRequest!)
+            print("[FileSync] fs-download list", self.startedDownloads)
+        }
 
-        // finished all downloads TODO: SEND CALLBACK
+        if self.startedDownloads.count < 4 {
+            print("[FileSync] fs-download list", self.startedDownloads)
+        }
+
+        // finished all downloads
         if self.startedDownloads.count == 0 {
+
+            let defaults = NSUserDefaults.standardUserDefaults()
+            defaults.setValue(false, forKey: "working")
+            defaults.synchronize()
+
             self.cb(result: 0)
-            print("Crazy shit, we finished downloading all files")
+            print("[FileSync] Crazy shit, we finished downloading all files")
         }
     }
 
@@ -56,29 +71,59 @@ class Downloader: NSObject, NSURLSessionDownloadDelegate {
     }
 
     // if there is an error during download this will be called
-    internal func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
+    internal func URLSession(session: NSURLSession, downloadTask: NSURLSessionTask, didCompleteWithError error: NSError?) {
         if(error != nil)
         {
-            print("Download completed with error: \(error!.localizedDescription)");
+            // failed download should also be removed from active downloads
+            let index = getIndexOfActiveDownload(downloadTask)
+
+            if index != nil {
+                let failedDownload = self.startedDownloads[index!]
+                self.startedDownloads.removeAtIndex(index!)
+
+                // restart one time
+                if failedDownload.restart == 0 {
+                    failedDownload.restart = 1
+                    failedDownload.downloadTask = self.session!.downloadTaskWithURL(failedDownload.url)
+                    failedDownload.downloadTask!.resume()
+                    self.startedDownloads.append(failedDownload)
+                }
+
+            } else {
+                print("[FileSync] fs-download failed not found in list", downloadTask.originalRequest!)
+            }
+
+            print("[FileSync] Download completed with error: \(error!.localizedDescription)");
+            print("[FileSync] Download completet with error", downloadTask.originalRequest!)
         }
     }
 
-    // download single
-    internal func download(url: NSURL) -> Void {
-        let session = self.getSession()
-        let task = session.downloadTaskWithURL(url)
-        self.startedDownloads.addObject(task.originalRequest!)
-        // print("added new url to startedDownloads", self.startedDownloads)
-        task.resume()
+    // ---------------------
+    // create, find downloads
+    // ---------------------
+    // get index of active download
+    private func getIndexOfActiveDownload(task: NSURLSessionTask) -> Int? {
+        for (index, startedDownload) in self.startedDownloads.enumerate() {
+            if startedDownload.downloadTask?.taskIdentifier == task.taskIdentifier {
+                return index
+            }
+        }
+        return nil
     }
 
-    // download multiple
-    internal func downloadMultiple(files: NSArray, remoteBaseUrl: NSURL, completion: (result: Int)->()) -> Void {
-        self.filesToDownload = files as! NSMutableArray
+    // download all files
+    internal func downloadMultiple(files: NSMutableArray, remoteBaseUrl: NSURL, completion: (result: Int)->()) -> Void {
         self.cb = completion
 
-        for item in self.filesToDownload {
-            self.download(remoteBaseUrl.URLByAppendingPathComponent(item["file"] as! String)!)
+        for item in files {
+            let downloadUrl = remoteBaseUrl.URLByAppendingPathComponent(item["file"] as! String)!
+
+            let download = FSDownload(url: downloadUrl)
+            download.isDownloading = true
+            download.localPath = item["file"] as! String
+            download.downloadTask = self.session!.downloadTaskWithURL(downloadUrl)
+            download.downloadTask!.resume()
+            self.startedDownloads.append(download)
         }
     }
 

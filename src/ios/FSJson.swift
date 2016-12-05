@@ -25,7 +25,7 @@ class Web {
 
     // try to parse as array or dictionary
     internal func parseJSON(JSONData: NSData) -> Void {
-        print("NOT ANYMORE IMPLENTED!")
+        print("[FileSync] NOT ANYMORE IMPLENTED!")
         /*
         let jsonDictOrObj = self.parseJSONArr(JSONData)
         if jsonDictOrObj != nil {

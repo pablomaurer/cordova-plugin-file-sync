@@ -1,5 +1,5 @@
 # cordova-plugin-file-sync
-This plugin does just sync files comparing a `manifest.json` to find out changed files. Then it downloads or deletes changed files.
+This plugin does just sync files comparing a `manifest.json` to find out changed files. Then it downloads or deletes changed files. For downloads backgroundmode is beeing used.
 
 Currently only IOS is implemented. Feel free to do the Android implementation.
 
@@ -17,11 +17,12 @@ In `config.xml` add `<preference name="UseLegacySwiftLanguageVersion" value="tru
 ### Why?
 Reasons:
 - Since in `WKWebview` you can't go out of the approot and access documents i needed to find another solution.
-- I used [cordova-hot-code-push-plugin](https://github.com/nordnet/cordova-hot-code-push/) as `in-app-updater` but there the old and new release are in different directories and you must perform a page refresh to be able to access newly synced images, which I didn't want.
+- I used [cordova-hot-code-push](https://github.com/nordnet/cordova-hot-code-push/) as `in-app-updater` but there the old and new release are in different directories and you must perform a page refresh to be able to access newly synced images, which I didn't want.
 
 ### Usage
 #### File Comparing
 This plugins compares the `local manifest.json` against the `server manifest.json` to find out, which files changes. This looks like:
+To create the manifest you can use the [cordova-hot-code-push-cli](https://github.com/nordnet/cordova-hot-code-push-cli)
 ```json
 [
   {
@@ -42,7 +43,6 @@ It compares a `local release.json` against a `server release.json` to find out i
 }
 ```
 #### JS
-example call:
 ```js
 cordova.plugins.fileSync.sync({
     pathRelease: 'https://domain.com/whatever/release.json',
@@ -105,19 +105,22 @@ resolveLocalFileSystemURL('cdvfile://localhost/library/Application Support/cordo
 });
 ```
 ### Todo
-Altough there are todo's this plugin is `production ready`, altough I never used it with a app in the appstore apple will may find something that isn't alright so I would be happy about feedback if it worked or not.
+Although there are todo's this plugin is `production ready`, but I never used it with a app in the appstore apple will may find something that isn't alright so I would be happy about feedback if it worked or not.
 
 Also since it's swift it's a bit more beginner friendly and I'm here for helping you, when you try to contribute.
 
 **Core Features:**
+- [x] uses backgroundmode
 - [x] download files 
 - [x] remove files
-- [ ] upload files via http -> so you have to make probably a php script to recieve the file (is it possible to save files to  `Application Support folder?`)
+- [ ] upload files via http -> so you have to make probably a php script to recieve the file
 
 **Feature:**
+- [ ] Create nodejs scripts for generating manifest-cli
 - [ ] Sending progress event (find other plugin to see how / cordova-content-sync-plugin maybe?)
 - [ ] something like cronjobs
 - [ ] Event / or Function which returns current status of plugin `working`, `finish` or whatever, will be more usefull when there is also something like a cronjob.
+- [ ] Function which returns localversion and last time finished with sync.
 - [ ] resume download if you where aborted, due to exit. background doesn't matter, because the download would still go on.
 - [ ] ftp implemenation try https://github.com/Constantine-Fry/rebekka
 - [ ] webdav implemenation
@@ -130,7 +133,7 @@ Also since it's swift it's a bit more beginner friendly and I'm here for helping
 - [ ] migrate to swift 3
 - [ ] avoid conflicts with other plugins using for every class a named prefix
 - [ ] instead of returning status via int, use enum/constants like [chcp errors](https://github.com/nordnet/cordova-hot-code-push/wiki/Error-codes)
-- [ ] what/which code is causing the thread warning of 15ms?
+- [ ] what/which code is causing the thread warning of 15ms? maybe the comparing of the manifests?
 
 ### Feelings and why swift? :P 
-Because i had no idea of `Obj-c` but the syntax looked really strange I wanted instead to try out `swift`. For me starting native developmen `swift` had a bit a easier syntax but it seems not so complete and there are less libs available. Also I really hate to use `callback` instead `js like promises`, altough there are libs for that available, I didn't want to use them in such a small project.
+Because i had no idea of `Obj-c` but the syntax looked really strange I wanted instead to try out `swift`. For me starting native developmen `swift` had a bit a easier syntax but it seems not so complete and there are less libs available. Also I really hate to use `callback` instead `js like promises`, although there are libs for that available, I didn't want to use them in such a small project.

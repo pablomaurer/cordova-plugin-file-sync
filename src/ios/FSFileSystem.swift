@@ -57,10 +57,10 @@ class FileSystem {
         var isDirectory: ObjCBool = false
         if !fileManager.fileExistsAtPath(String(parentPath.path!), isDirectory:&isDirectory) {
             do {
-                print("making dir at: ", String(parentPath.path!))
+                print("[FileSync] making dir at: ", String(parentPath.path!))
                 try fileManager.createDirectoryAtPath(String(parentPath.path!), withIntermediateDirectories: true, attributes: nil)
             } catch let error as NSError {
-                print("Error creating dirs: ", error.localizedDescription)
+                print("[FileSync] Error creating dirs: ", error.localizedDescription)
             }
 
             self.mv(currentPath, to: targetPath)
@@ -79,7 +79,7 @@ class FileSystem {
             return true
         }
         catch let error as NSError {
-            print("Ooops! Something went wrong moving file: \(error)")
+            print("[FileSync] Ooops! Something went wrong moving file: \(error)")
             return false
         }
     }
@@ -91,7 +91,7 @@ class FileSystem {
                 return true
             }
             catch {
-                print("Ooops! Something went wrong: \(error)")
+                print("[FileSync] Ooops! Something went wrong: \(error)")
                 return false
             }
         }

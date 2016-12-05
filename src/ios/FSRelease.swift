@@ -16,7 +16,7 @@ class Release {
         if let localVersion = defaults.stringForKey("localVersion") {
             return localVersion != remoteVersion
         }
-        print("no local version, so the new version is allright")
+        print("[FileSync] no local version, so the new version is allright")
         return true
     }
 

@@ -21,35 +21,42 @@ class Manifest {
         self.pathManifestLocalTemp = manifestLocal.URLByAppendingPathComponent("temp-manifest.json")!
     }
 
-    internal func loadAndCompare(comparedCB: (filesToDownload: NSArray, filesToDelete: NSArray, filesToUpload: NSArray) -> Void) {
+    internal func loadAndCompare(comparedCB: (filesToDownload: NSMutableArray, filesToDelete: NSMutableArray, filesToUpload: NSMutableArray, error:Int?) -> Void) {
         // after we have got the manifest, we finnaly can compare
-        self.loadRemoteManifest() { (remoteManifest) -> () in
-            self.compareManifest(remoteManifest, localManifest: self.loadLocalManifest());
-            comparedCB(filesToDownload: self.filesToDownload, filesToDelete: self.filesToDelete, filesToUpload: self.filesToUpload)
+        self.loadRemoteManifest() { (remoteManifest: NSArray?, error: Int?) -> () in
+
+            // don't even start comparing, just return empty arrs with an error
+            if error != nil {
+                comparedCB(filesToDownload: self.filesToDownload, filesToDelete: self.filesToDelete, filesToUpload: self.filesToUpload, error:error)
+            } else {
+                self.compareManifest(remoteManifest, localManifest: self.loadLocalManifest());
+                comparedCB(filesToDownload: self.filesToDownload, filesToDelete: self.filesToDelete, filesToUpload: self.filesToUpload, error:nil)
+            }
         }
 
     }
 
-    private func loadRemoteManifest(loadedRemoteManifestCB: (NSArray?) -> Void) {
+    private func loadRemoteManifest(loadedRemoteManifestCB: (NSArray?, Int?) -> Void) {
         web.getJson(self.pathManifestRemote) { (data, response, error) -> () in
             // error getting json
             guard error == nil else {
-                // loadedRemoteManifestCB(nil, -3)
+                loadedRemoteManifestCB(nil, -3)
                 return
             }
 
             // parsing json
             let(arr, error) = self.web.parseJSONArr(data!)
 
+
             // error parsing json
             guard error == nil else {
-                //loadedRemoteManifestCB(nil, -4)
+                loadedRemoteManifestCB(nil, -4)
                 return
             }
 
             // final success callback :)
             data!.writeToURL(self.pathManifestLocalTemp, atomically: true)
-            loadedRemoteManifestCB(arr)
+            loadedRemoteManifestCB(arr, nil)
         }
     }
 
@@ -92,14 +99,14 @@ class Manifest {
                     isDeleted = false
                     if oldFile["hash"] as! String != newFile["hash"] as! String {
                         self.filesToDownload.addObject(newFile)
-                        print("file change on remote", newFile)
+                        print("[FileSync] file change on remote", newFile)
                     }
                 }
             }
 
             if isDeleted {
                 self.filesToDelete.addObject(oldFile["file"] as! String)
-                print("file deleted on remote", oldFile)
+                print("[FileSync] file deleted on remote", oldFile)
             }
 
         }
@@ -117,7 +124,7 @@ class Manifest {
 
             if !found {
                 self.filesToDownload.addObject(newFile)
-                print("file added on remote ", newFile)
+                print("[FileSync] file added on remote ", newFile)
             }
 
         }
