@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin id="cordova-plugin-file-sync" version="0.1.3" xmlns="http://apache.org/cordova/ns/plugins/1.0">
+<plugin id="cordova-plugin-file-sync" version="0.1.4" xmlns="http://apache.org/cordova/ns/plugins/1.0">
   <name>cordova-plugin-file-sync</name>
 
   <js-module name="fileSync" src="www/fileSync.js">
@@ -20,6 +20,7 @@
     <source-file src="src/ios/FSFileSystem.swift" />
     <source-file src="src/ios/FSJson.swift" />
     <source-file src="src/ios/FSDownloader.swift" />
+    <source-file src="src/ios/FSDownload.swift" />
 
     <dependency id="cordova-plugin-add-swift-support" url="https://github.com/akofman/cordova-plugin-add-swift-support"/>
   </platform>
