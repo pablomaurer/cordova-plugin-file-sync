@@ -16,13 +16,13 @@ In `config.xml` add `<preference name="UseLegacySwiftLanguageVersion" value="tru
 
 ### Why?
 Reasons:
-- Since in `WKWebview` you can't go out of the approot and access documents i needed to find another solution.
 - I used [cordova-hot-code-push](https://github.com/nordnet/cordova-hot-code-push/) as `in-app-updater` but there the old and new release are in different directories and you must perform a page refresh to be able to access newly synced images, which I didn't want.
+- You can sync it with to any directory you want.
+- It uses background downloader, even you quit you app, it will continue finishing the sync progress.
 
 ### Usage
 #### File Comparing
 This plugins compares the `local manifest.json` against the `server manifest.json` to find out, which files changes. This looks like:
-To create the manifest you can use the [cordova-hot-code-push-cli](https://github.com/nordnet/cordova-hot-code-push-cli)
 ```json
 [
   {
@@ -35,7 +35,10 @@ To create the manifest you can use the [cordova-hot-code-push-cli](https://githu
   }
 ]
 ```
-#### New release
+To create the manifest you can use the [cordova-hot-code-push-cli](https://github.com/nordnet/cordova-hot-code-push-cli) or 
+the [php script](https://github.com/mnewmedia/cordova-plugin-file-sync/blob/master/manifest.php) to generate the manifest on the fly.
+
+#### Release handling (optional)
 It compares a `local release.json` against a `server release.json` to find out if a new release is available. It just compares the strings of the release property!
 ```json
 {
@@ -58,15 +61,11 @@ function(err) {
 });
 ```
 explanation of args:
-- pathRelease: is the server path where json will be returned which includes a property named "release"
 - pathManifest: is the server path where json will be returned which include an arreay of objects with "file" and "hash" properties
 - pathRemoteDir: is the server path where the remote files are located
-- [pathLocalDir]: is the path on ios where the manifest and all remote files will be stored, the release will be saved elsewhere in something like a native localstorage.
+- [pathRelease]: is the optional server path where json will be returned which includes a property named "release", if you omit this property, it will hash the local and remote manifest and compare them to find if there is a new version (easier but data usage increases a bit)
+- [pathLocalDir]: is the optional local path on ios where the manifest and all remote files will be stored, the release will be saved in something like a native localstorage. defaults to : `/Users/pm/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<UDID>/Library/Application Support/cordova-plugin-file-sync/`
 
-defaults:
-```
-pathLocal: "/Users/pm/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<UDID>/Library/Application Support/cordova-plugin-file-sync/"
-```
 returns if it worked positiv ingerer in success callback, if error occured negativ integer in error callback:
 - 1 no update found
 - 0 update installed 
@@ -78,7 +77,7 @@ returns if it worked positiv ingerer in success callback, if error occured negat
 - -6 could not move file to pathLocal
 - more todo?
 #### Trick
-To be more flexible you alway can generate the `serverside json` via `php` or whatever you like to use.
+To be more flexible you alway can generate the `serverside json` via `php` or whatever you like to use a php script for creating the manifest serverside is already included.
 
 #### chcp (cordova-hot-code-push) and locations
 Some filesystem and how to use it with chcp explanations, although you can use it without chcp-plugin.
@@ -116,7 +115,8 @@ Also since it's swift it's a bit more beginner friendly and I'm here for helping
 - [ ] upload files via http -> so you have to make probably a php script to recieve the file
 
 **Feature:**
-- [ ] Create nodejs scripts for generating manifest-cli
+- [x] Create pho scripts for generating manifest.json
+- [ ] Create nodejs scripts for generating manifest.json
 - [ ] Sending progress event (find other plugin to see how / cordova-content-sync-plugin maybe?)
 - [ ] something like cronjobs
 - [ ] Event / or Function which returns current status of plugin `working`, `finish` or whatever, will be more usefull when there is also something like a cronjob.
@@ -128,12 +128,12 @@ Also since it's swift it's a bit more beginner friendly and I'm here for helping
 - [ ] return more for example: numUploadedFiles, numDownloadedFiles, numDeletedFiles, newVersion,  oldVersion. more ideas?
 
 **Qualtiy:**
-- [ ] Error handling in Downloader
-- [ ] currently the most errors are just surrounded with if else but not returned
+- [x] Error handling in Downloader
+- [x] currently the most errors are just surrounded with if else but not returned
 - [ ] migrate to swift 3
 - [ ] avoid conflicts with other plugins using for every class a named prefix
 - [ ] instead of returning status via int, use enum/constants like [chcp errors](https://github.com/nordnet/cordova-hot-code-push/wiki/Error-codes)
-- [ ] what/which code is causing the thread warning of 15ms? maybe the comparing of the manifests?
+- [x] what/which code is causing the thread warning of 15ms? maybe the comparing of the manifests?
 
 ### Feelings and why swift? :P 
 Because i had no idea of `Obj-c` but the syntax looked really strange I wanted instead to try out `swift`. For me starting native developmen `swift` had a bit a easier syntax but it seems not so complete and there are less libs available. Also I really hate to use `callback` instead `js like promises`, although there are libs for that available, I didn't want to use them in such a small project.
