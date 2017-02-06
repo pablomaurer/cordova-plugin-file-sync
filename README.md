@@ -61,10 +61,10 @@ function(err) {
 });
 ```
 explanation of args:
-- pathManifest: is the server path where json will be returned which include an arreay of objects with "file" and "hash" properties
-- pathRemoteDir: is the server path where the remote files are located
-- [pathRelease]: is the optional server path where json will be returned which includes a property named "release", if you omit this property, it will hash the local and remote manifest and compare them to find if there is a new version (easier but data usage increases a bit)
-- [pathLocalDir]: is the optional local path on ios where the manifest and all remote files will be stored, the release will be saved in something like a native localstorage. defaults to : `/Users/pm/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<UDID>/Library/Application Support/cordova-plugin-file-sync/`
+- *pathManifest*: is the server path where json will be returned which include an arreay of objects with "file" and "hash" properties
+- *pathRemoteDir*: is the server path where the remote files are located
+- *[pathRelease]*: is the optional server path where json will be returned which includes a property named "release", if you omit this property, it will hash the local and remote manifest and compare them to find if there is a new version (easier but data usage increases a bit)
+- *[pathLocalDir]*: is the optional local path on ios where the manifest and all remote files will be stored, the release will be saved in something like a native localstorage. defaults to : `/Users/pm/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<UDID>/Library/Application Support/cordova-plugin-file-sync/`
 
 returns if it worked positiv ingerer in success callback, if error occured negativ integer in error callback:
 - 1 no update found
