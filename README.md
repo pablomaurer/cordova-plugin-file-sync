@@ -76,7 +76,9 @@ explanation of args:
 - **[pathRelease]**: is the optional server path where json will be returned which includes a property named "release", if you omit this property, it will hash the local and remote manifest and compare them to find if there is a new version (easier but data usage increases a bit)
 - **[pathLocalDir]**: is the optional local path on ios where the manifest and all remote files will be stored, the release will be saved in something like a native localstorage. defaults to : `/Users/pm/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<UDID>/Library/Application Support/cordova-plugin-file-sync/`
 - **[pathUpload]** if not defined it will just act as a one-way sync from remote to local.
-returns if it worked positiv ingerer in success callback, if error occured negativ integer in error callback:
+
+### Error codes
+returns if it worked positiv int in success callback, if error occured negativ integer in error callback:
 - 1 no update found
 - 0 update installed 
 - -1 request to release.json failed
