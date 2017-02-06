@@ -87,8 +87,11 @@ returns if it worked positiv int in success callback, if error occured negativ i
 - -4 parsing of manifest.json failed
 - -5 aborted (only possible if app did really quit)
 - -6 could not move file to pathLocal
+
 ### Trick
 To be more flexible you alway can generate the `serverside json` via `php` or whatever you like to use a php script for creating the manifest serverside is already included.
+
+----
 
 ### chcp (cordova-hot-code-push) and locations
 Some filesystem and how to use it with chcp explanations, although you can use it without chcp-plugin.
