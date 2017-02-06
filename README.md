@@ -1,5 +1,8 @@
 # cordova-plugin-file-sync
-This plugin does just sync files comparing a `manifest.json` to find out changed files. Then it downloads or deletes changed files. For downloads backgroundmode is beeing used.
+Two way or one way sync files using a `manifest.json` for comparing to find out changed files. It will
+ - downlaod files
+ - remove files
+ - uplaod files (optional)
 
 Currently only IOS is implemented. Feel free to do the Android implementation.
 
@@ -51,7 +54,8 @@ cordova.plugins.fileSync.sync({
     pathRelease: 'https://domain.com/whatever/release.json',
     pathManifest: 'https://domain.com/whatever/manifest.json',
     pathRemoteDir: 'https://domain.com/whatever/www/'
-    pathLocalDir: 'file:/where/you/want/the/downloads'
+    pathLocalDir: 'file:/where/you/want/the/downloads',
+    pathUpload: 'https://domain.com/whatever/upload.php',
 },
 function(msg) {
     console.log('success', msg);
@@ -65,7 +69,7 @@ explanation of args:
 - **pathRemoteDir**: is the server path where the remote files are located
 - **[pathRelease]**: is the optional server path where json will be returned which includes a property named "release", if you omit this property, it will hash the local and remote manifest and compare them to find if there is a new version (easier but data usage increases a bit)
 - **[pathLocalDir]**: is the optional local path on ios where the manifest and all remote files will be stored, the release will be saved in something like a native localstorage. defaults to : `/Users/pm/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<UDID>/Library/Application Support/cordova-plugin-file-sync/`
-
+- **[pathUpload]** if not defined it will just act as a one-way sync from remote to local.
 returns if it worked positiv ingerer in success callback, if error occured negativ integer in error callback:
 - 1 no update found
 - 0 update installed 
