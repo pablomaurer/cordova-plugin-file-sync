@@ -6,12 +6,12 @@ Currently only IOS is implemented. Feel free to do the Android implementation.
 ### installation
 ```sh
 // stable
-cordova-plugin-add-swift-support
 cordova plugin add cordova-plugin-file-sync
 
 // development
 cordova plugin add `github repo`
 ```
+It will also install `cordova-plugin-add-swift-support` automatically which is needed.
 In `config.xml` add `<preference name="UseLegacySwiftLanguageVersion" value="true" />`
 
 ### Why?
