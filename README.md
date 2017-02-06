@@ -2,9 +2,15 @@
 Two way or one way sync files using a `manifest.json` for comparing to find out changed files. It will
  - downlaod files
  - remove files
- - uplaod files (optional)
+ - upload files (optional)
 
 Currently only IOS is implemented. Feel free to do the Android implementation.
+
+### Quick guide
+- install plugin
+- create manifest (own php solution included, third party js solution referenced)
+- decide if you want version control
+- decide if you want to enable uploads (php script included)
 
 ### installation
 ```sh
@@ -119,16 +125,16 @@ Also since it's swift it's a bit more beginner friendly and I'm here for helping
 - [ ] upload files via http -> so you have to make probably a php script to recieve the file
 
 **Feature:**
-- [x] Create pho scripts for generating manifest.json
-- [ ] Create nodejs scripts for generating manifest.json
+- [x] http implemenation
+- [ ] ftp implemenation try https://github.com/Constantine-Fry/rebekka
+- [ ] webdav implemenation
+- [x] php script for generating manifest.json
+- [ ] nodejs script for generating manifest.json
+- [x] optional comparing `release.json`
 - [ ] Sending progress event (find other plugin to see how / cordova-content-sync-plugin maybe?)
-- [ ] something like cronjobs
 - [ ] Event / or Function which returns current status of plugin `working`, `finish` or whatever, will be more usefull when there is also something like a cronjob.
 - [ ] Function which returns localversion and last time finished with sync.
 - [ ] resume download if you where aborted, due to exit. background doesn't matter, because the download would still go on.
-- [ ] ftp implemenation try https://github.com/Constantine-Fry/rebekka
-- [ ] webdav implemenation
-- [ ] optional comparing `release.json`
 - [ ] return more for example: numUploadedFiles, numDownloadedFiles, numDeletedFiles, newVersion,  oldVersion. more ideas?
 
 **Qualtiy:**
