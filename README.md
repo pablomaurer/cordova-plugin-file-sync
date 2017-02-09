@@ -2,7 +2,7 @@
 Two way or one way sync files using a `manifest.json` for comparing to find out changed files. It will
  - downlaod files
  - remove files
- - upload files (optional)
+ - upload files (optional, only works with manifest created via php)
 
 Currently only IOS is implemented. Feel free to do the Android implementation.
 
