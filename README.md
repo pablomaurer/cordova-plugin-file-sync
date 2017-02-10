@@ -57,11 +57,15 @@ It compares a `local release.json` against a `server release.json` to find out i
 #### JS
 ```js
 cordova.plugins.fileSync.sync({
-    pathRelease: 'https://domain.com/whatever/release.json',
     pathManifest: 'https://domain.com/whatever/manifest.json',
     pathRemoteDir: 'https://domain.com/whatever/www/'
+    pathRelease: 'https://domain.com/whatever/release.json',
     pathLocalDir: 'file:/where/you/want/the/downloads',
     pathUpload: 'https://domain.com/whatever/upload.php',
+},
+{
+    postdata: 'value',
+    moredata: 'morevalue'
 },
 function(msg) {
     console.log('success', msg);
@@ -70,7 +74,7 @@ function(err) {
     console.log('error', err);
 });
 ```
-explanation of args:
+explanation of options:
 - **pathManifest**: is the server path where json will be returned which include an arreay of objects with "file" and "hash" properties
 - **pathRemoteDir**: is the server path where the remote files are located
 - **[pathRelease]**: is the optional server path where json will be returned which includes a property named "release", if you omit this property, it will hash the local and remote manifest and compare them to find if there is a new version (easier but data usage increases a bit)
@@ -126,7 +130,7 @@ Also since it's swift it's a bit more beginner friendly and I'm here for helping
 - [x] uses backgroundmode
 - [x] download files 
 - [x] remove files
-- [ ] upload files via http -> so you have to make probably a php script to recieve the file
+- [x] upload files via http -> so you have to make probably a php script to recieve the file
 
 **Feature:**
 - [x] http implemenation
@@ -145,7 +149,7 @@ Also since it's swift it's a bit more beginner friendly and I'm here for helping
 - [x] Error handling in Downloader
 - [x] currently the most errors are just surrounded with if else but not returned
 - [ ] migrate to swift 3
-- [ ] avoid conflicts with other plugins using for every class a named prefix
+- [x] avoid conflicts with other plugins using for every class a named prefix
 - [ ] instead of returning status via int, use enum/constants like [chcp errors](https://github.com/nordnet/cordova-hot-code-push/wiki/Error-codes)
 - [x] what/which code is causing the thread warning of 15ms? maybe the comparing of the manifests?
 
