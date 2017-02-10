@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin id="cordova-plugin-file-sync" version="0.2.0" xmlns="http://apache.org/cordova/ns/plugins/1.0">
+<plugin id="cordova-plugin-file-sync" version="0.2.1" xmlns="http://apache.org/cordova/ns/plugins/1.0">
   <name>cordova-plugin-file-sync</name>
 
   <js-module name="fileSync" src="www/fileSync.js">
