@@ -1,6 +1,6 @@
 # cordova-plugin-file-sync
 Two way or one way sync files using a `manifest.json` for comparing to find out changed files. It will
- - downlaod files
+ - download files
  - remove files
  - upload files (optional, only works with manifest created via php)
 
