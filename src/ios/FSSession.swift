@@ -52,6 +52,9 @@ class FSSession: NSObject, NSURLSessionTaskDelegate, NSURLSessionDelegate, NSURL
             return
         }
 
+        // print("finishid task", type)
+        // print("finishid task", task.originalRequest?.URL)
+
         if type == "download" {
             self.fsDownloader!.handleComplete(task, error: error)
         } else if type == "upload" {

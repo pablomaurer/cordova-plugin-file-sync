@@ -20,8 +20,8 @@ class FSManifest {
     init(manifestRemote: String, pathLocal: NSURL, parameter: Dictionary<String, String>?) {
         self.pathLocal = pathLocal
         self.pathManifestRemote = manifestRemote
-        self.pathManifestLocal = pathLocal.URLByAppendingPathComponent("manifest.json")!
-        self.pathManifestLocalTemp = NSURL(fileURLWithPath: pathLocal.path! + "temp-manifest.json")
+        self.pathManifestLocal = NSURL(fileURLWithPath: pathLocal.path! + "/manifest.json")
+        self.pathManifestLocalTemp = NSURL(fileURLWithPath: pathLocal.path! + "/temp-manifest.json")
         self.parameter = parameter
     }
 
@@ -83,10 +83,14 @@ class FSManifest {
             return nil
         }
 
+        print("LOCAL MANIFEST", JSONArr)
         return JSONArr
     }
 
     private func findNewLocalFiles(localFiles: [String], localManifest: NSArray?) -> [String] {
+        // print("local files", localFiles)
+        // print("local manifest", localManifest)
+
         guard localManifest != nil else {
             return localFiles
         }
@@ -187,8 +191,10 @@ class FSManifest {
                     if number == 0 {
                         var subpath = element.path?.stringByReplacingOccurrencesOfString(self.pathLocal.path!, withString: "")
                         subpath = subpath!.stringByReplacingOccurrencesOfString("/private", withString: "")
-                        print("[FileSync] subpathsubpathsubpath", subpath)
-                        localFiles.append(subpath!)
+                        subpath = String(subpath!.characters.dropFirst())
+                        if (subpath != "manifest.json" && subpath != "temp-manifest.json") {
+                            localFiles.append(subpath!)
+                        }
                     }
                 }
 
