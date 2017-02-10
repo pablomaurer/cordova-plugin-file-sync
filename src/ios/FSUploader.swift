@@ -10,7 +10,7 @@ class FSUploader: FSLoader {
 
         for item in files {
             let item = item as! String
-            let localFilePath = NSURL(fileURLWithPath: pathLocal.path! + item)
+            let localFilePath = NSURL(fileURLWithPath: pathLocal.path! + "/" + item)
 
             var params = [
                 "subpath" : item

@@ -21,7 +21,7 @@ class FSManifest {
         self.pathLocal = pathLocal
         self.pathManifestRemote = manifestRemote
         self.pathManifestLocal = pathLocal.URLByAppendingPathComponent("manifest.json")!
-        self.pathManifestLocalTemp = pathLocal.URLByAppendingPathComponent("temp-manifest.json")!
+        self.pathManifestLocalTemp = NSURL(fileURLWithPath: pathLocal.path! + "temp-manifest.json")
         self.parameter = parameter
     }
 
@@ -59,7 +59,7 @@ class FSManifest {
             }
 
             // final success callback :)
-            data!.writeToURL(self.pathManifestLocalTemp, atomically: true)
+            data!.writeToURL(self.pathManifestLocalTemp.filePathURL!, atomically: true)
             loadedRemoteManifestCB(arr, nil)
         }
     }
@@ -186,7 +186,7 @@ class FSManifest {
                 if let number = rsrc as? NSNumber {
                     if number == 0 {
                         var subpath = element.path?.stringByReplacingOccurrencesOfString(self.pathLocal.path!, withString: "")
-                        subpath = subpath!.stringByReplacingOccurrencesOfString("private", withString: "")
+                        subpath = subpath!.stringByReplacingOccurrencesOfString("/private", withString: "")
                         print("[FileSync] subpathsubpathsubpath", subpath)
                         localFiles.append(subpath!)
                     }
