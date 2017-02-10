@@ -13,14 +13,17 @@
       </feature>
     </config-file>
 
+    <source-file src="src/ios/FSDownloader.swift" />
     <source-file src="src/ios/FSFileSync.swift" />
-    <source-file src="src/ios/FSSync.swift" />
-    <source-file src="src/ios/FSRelease.swift" />
-    <source-file src="src/ios/FSManifest.swift" />
     <source-file src="src/ios/FSFileSystem.swift" />
     <source-file src="src/ios/FSJson.swift" />
-    <source-file src="src/ios/FSDownloader.swift" />
-    <source-file src="src/ios/FSDownload.swift" />
+    <source-file src="src/ios/FSLoader.swift" />
+    <source-file src="src/ios/FSManifest.swift" />
+    <source-file src="src/ios/FSRelease.swift" />
+    <source-file src="src/ios/FSSession.swift" />
+    <source-file src="src/ios/FSSync.swift" />
+    <source-file src="src/ios/FSTask.swift" />
+    <source-file src="src/ios/FSUploader.swift" />
 
     <dependency id="cordova-plugin-add-swift-support" url="https://github.com/akofman/cordova-plugin-add-swift-support"/>
   </platform>
