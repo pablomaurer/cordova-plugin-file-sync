@@ -3,38 +3,30 @@
  *
  *
  */
-class Web {
+class FSJson {
 
     private let sessionConfig: NSURLSessionConfiguration
     private let urlSession: NSURLSession
 
     init() {
         // prevent returning cache result, may not best for all requests
-        // TODO test with IOS9 due: http://stackoverflow.com/questions/30324394/prevent-nsurlsession-from-caching-responses?noredirect=1&lq=1
         self.sessionConfig = NSURLSessionConfiguration.defaultSessionConfiguration()
         self.sessionConfig.requestCachePolicy = .ReloadIgnoringLocalCacheData
         self.urlSession = NSURLSession(configuration: self.sessionConfig)
     }
 
-    // json, callback, returns null
-    internal func getJson(url: String, completion: (data: NSData?, response: NSURLResponse?, error: NSError?)->()) -> Void {
-        self.urlSession.dataTaskWithURL(NSURL(string: url)!) { data, response, error in
-            completion(data: data, response: response, error: error)
-        }.resume()
-    }
+    // json, callback
+    internal func getJson(url: String, parameter: Dictionary<String, String>?, completion: (data: NSData?, response: NSURLResponse?, error: NSError?)->()) -> Void {
+        let request = NSMutableURLRequest(URL: NSURL(string: url)!)
 
-    // try to parse as array or dictionary
-    internal func parseJSON(JSONData: NSData) -> Void {
-        print("[FileSync] NOT ANYMORE IMPLENTED!")
-        /*
-        let jsonDictOrObj = self.parseJSONArr(JSONData)
-        if jsonDictOrObj != nil {
-            return jsonDictOrObj!
-        } else {
-            let jsonDictOrObj = self.parseJSONObj(JSONData)
-            return jsonDictOrObj!
+        if parameter != nil {
+            request.encodeParameters(parameter!)
         }
-         */
+
+        let task = self.urlSession.dataTaskWithRequest(request) { data, response, error in
+            completion(data: data, response: response, error: error)
+        }
+        task.resume()
     }
 
     // try to parse json or return nil
@@ -67,7 +59,24 @@ class Web {
     // toJSON
     // https://code.tutsplus.com/tutorials/working-with-json-in-swift--cms-25335
 
-    // upload file
+}
 
+extension NSMutableURLRequest {
 
+    private func percentEscapeString(string: String) -> String {
+        let characterSet = NSCharacterSet(charactersInString: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._* ")
+
+        return string
+            .stringByAddingPercentEncodingWithAllowedCharacters(characterSet)!
+            .stringByReplacingOccurrencesOfString(" ", withString: "+", options: [], range: nil)
+    }
+
+    func encodeParameters(parameters: [String : String]) {
+        HTTPMethod = "POST"
+
+        HTTPBody = parameters
+            .map { "\(percentEscapeString($0))=\(percentEscapeString($1))" }
+            .joinWithSeparator("&")
+            .dataUsingEncoding(NSUTF8StringEncoding)
+    }
 }

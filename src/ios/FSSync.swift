@@ -3,54 +3,69 @@
  *
  *
  */
-class Main {
+class FSMain {
 
-    private let fileSystem: FileSystem
-    private let release: Release
-    private let manifest: Manifest
+    private let fileSystem: FSFileSystem
+    private let release: FSRelease
+    private let manifest: FSManifest
     private var pluginResultCB: (statusCode: Int) -> Void = { arg in }
     private let remoteDir: NSURL
-    private var working: Bool
+    private let pathUpload: NSURL
+    private let fsSession: FSSession
+    private let reqParameter: Dictionary<String, String>?
 
-
-    init(jsOptions: NSDictionary, pluginResultCB: (result: Int)->()) {
-
-        // load status
-        let defaults = NSUserDefaults.standardUserDefaults()
-        self.working =  defaults.boolForKey("working")
-        print("[FileSync] already working (may needs to handle all done background threads, before starting again)", self.working)
+    init(jsOptions: Dictionary<String,String>, reqParamater: Dictionary<String, String>?, pluginResultCB: (result: Int)->()) {
+        self.reqParameter = reqParamater
 
         // setup filesystem (must be done, before something uses this singleton)
-        self.fileSystem = FileSystem.Instance()
-        self.fileSystem.setup(jsOptions["pathLocalDir"] as? String)
+        self.fileSystem = FSFileSystem.Instance()
+        self.fileSystem.setup(jsOptions["pathLocalDir"])
 
-        self.remoteDir = NSURL(string: jsOptions["pathRemoteDir"] as! String)!
+        self.remoteDir = NSURL(string: jsOptions["pathRemoteDir"]!)!
+        self.pathUpload = NSURL(string: (jsOptions["pathUpload"])!)!
 
-        self.release = Release()
-        self.manifest = Manifest(manifestRemote: jsOptions["pathManifest"] as! String, manifestLocal: self.fileSystem.pathRoot)
+        self.release = FSRelease()
+        self.manifest = FSManifest(manifestRemote: jsOptions["pathManifest"]!, pathLocal: self.fileSystem.pathRoot, parameter: reqParamater)
+        self.fsSession = FSSession.Instance()
+        self.fsSession.setCB(self.handleNetworkRequestsComplete)
 
-        // else session will not be setup, and outstanding background tasks will not finish.
-        Downloader.Instance().setup()
+        // CHECK IF ALREADY WORKING, IF NOT START
+        func da(task: [NSURLSessionTask]) -> Void {
+            if task.count == 0 {
+                guard jsOptions["pathRelease"] != nil else {
+                    self.manifest.loadAndCompare(handleLoadAndCompare)
+                    return
+                }
+                self.release.isNewVersionAvailable(jsOptions["pathRelease"]!, completion: handleIsNewVersionAvailable)
+            } else {
+                print("[FileSync] info: already working wait until we are done")
+            }
+        }
 
-        if !self.working {
-            self.release.isNewVersionAvailable(jsOptions["pathRelease"] as! String, completion: handleIsNewVersionAvailable)
-        } else { }
+        if #available(iOS 9.0, *) {
+            self.fsSession.session?.getAllTasksWithCompletionHandler(da)
+        } else {
+            print("[FileSync] IOS 8 is not supported")
+        }
+        // CHECK IF ALREADY WORKING, IF NOT START
 
         self.pluginResultCB = pluginResultCB
-        // TODO: instead casting options here, parse them as struct? for better error handling where you also could throw option xy not set
     }
 
     private func handleIsNewVersionAvailable(newRelease: Bool?, error: Int?) -> Void {
-        if ((error) != nil) {
+        print("[FileSync] newRelease: ", newRelease)
+
+        guard error == nil else {
             self.sendSuccessCB(error!)
-        } else {
-            print("[FileSync] newRelease: ", newRelease!)
-            if newRelease! {
-                self.manifest.loadAndCompare(handleLoadAndCompare)
-            } else {
-                pluginResultCB(statusCode: 1)
-            }
+            return
         }
+
+        guard newRelease == true else {
+            pluginResultCB(statusCode: 1)
+            return
+        }
+
+        self.manifest.loadAndCompare(handleLoadAndCompare)
     }
 
     private func handleLoadAndCompare(filesToDownload: NSMutableArray, filesToDelete: NSMutableArray, filesToUpload: NSMutableArray, error: Int?) -> Void {
@@ -63,35 +78,29 @@ class Main {
             return
         }
 
-        if filesToUpload.count > 0 || filesToDownload.count > 0 {
-            let defaults = NSUserDefaults.standardUserDefaults()
-            defaults.setValue(true, forKey: "working")
-            defaults.synchronize()
-        }
-
         // delete
         if filesToDelete.count > 0 {
             fileSystem.deleteFilesInRoot(filesToDelete)
         }
 
-        // download
-        if filesToDownload.count > 0 {
-            Downloader.Instance().downloadMultiple(filesToDownload, remoteBaseUrl: self.remoteDir, completion: self.handleDownloadComplete)
-        } else {
-            self.handleDownloadComplete(0)
+        // check if loader must be started
+        if filesToUpload.count == 0 && filesToDownload.count == 0 {
+            self.handleNetworkRequestsComplete(0);
         }
 
-        // to be able to catch all errors, i can't do everything here
-        // have to first download, in downloadHandler start delete, and start upload, in uploadHandler call finally pluginCallback
+        // download
+        if filesToDownload.count > 0 {
+            self.fsSession.fsDownloader!.startDownloads(filesToDownload, remoteBaseUrl: self.remoteDir)
+        }
 
         // upload
         if filesToUpload.count > 0 {
-            // TODO: uploader class -> first check if you can save to this location
+            self.fsSession.fsUploader!.startUploads(filesToUpload, pathLocal: self.fileSystem.pathRoot, pathUpload: self.pathUpload, optionalParams: self.reqParameter)
         }
 
     }
 
-    private func handleDownloadComplete(result: Int) -> Void {
+    private func handleNetworkRequestsComplete(result: Int) -> Void {
         self.manifest.saveNewManifest()
         self.release.setNewVersion()
         pluginResultCB(statusCode: 0)

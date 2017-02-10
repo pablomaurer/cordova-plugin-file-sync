@@ -3,11 +3,11 @@
  *
  *
  */
-class Release {
+class FSRelease {
 
     internal var releaseLocal: String = ""
     internal var releaseRemote: String = ""
-    internal let web = Web()
+    internal let fsJson = FSJson()
 
     private let defaults = NSUserDefaults.standardUserDefaults()
 
@@ -28,8 +28,7 @@ class Release {
 
     // check version available
     internal func isNewVersionAvailable(url: String, completion: (available: Bool?, error: Int?) -> Void) {
-
-        web.getJson(url) { (data, response, error) -> () in
+        fsJson.getJson(url, parameter: nil) { (data, response, error) -> () in
 
             // error getting json
             guard error == nil else {
@@ -38,7 +37,7 @@ class Release {
             }
 
             // parsing json
-            let(result, error) = self.web.parseJSONObj(data!)
+            let(result, error) = self.fsJson.parseJSONObj(data!)
 
             // error parsing json
             guard error == nil else {

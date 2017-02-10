@@ -3,7 +3,7 @@
  *
  *
  */
-class FileSystem {
+class FSFileSystem {
 
     var pathRoot: NSURL = NSURL(string: "http://you-did-not-call-setup().com")!
     var pathManifest: NSURL = NSURL(string: "http://you-did-not-call-setup().com")!
@@ -11,10 +11,10 @@ class FileSystem {
 
     // singleton
     private init() {}
-    internal static func Instance() -> FileSystem {
+    internal static func Instance() -> FSFileSystem {
         return instance
     }
-    static let instance : FileSystem = FileSystem()
+    static let instance : FSFileSystem = FSFileSystem()
 
     internal func setup(pathRoot: String?) -> Void {
         if (pathRoot == nil) {
