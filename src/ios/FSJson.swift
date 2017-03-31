@@ -5,37 +5,43 @@
  */
 class FSJson {
 
-    private let sessionConfig: NSURLSessionConfiguration
-    private let urlSession: NSURLSession
+    fileprivate let sessionConfig: URLSessionConfiguration
+    fileprivate let urlSession: URLSession
 
     init() {
         // prevent returning cache result, may not best for all requests
-        self.sessionConfig = NSURLSessionConfiguration.defaultSessionConfiguration()
-        self.sessionConfig.requestCachePolicy = .ReloadIgnoringLocalCacheData
-        self.urlSession = NSURLSession(configuration: self.sessionConfig)
+        self.sessionConfig = URLSessionConfiguration.default
+        self.sessionConfig.requestCachePolicy = .reloadIgnoringLocalCacheData
+        self.urlSession = URLSession(configuration: self.sessionConfig)
     }
 
     // json, callback
-    internal func getJson(url: String, parameter: Dictionary<String, String>?, completion: (data: NSData?, response: NSURLResponse?, error: NSError?)->()) -> Void {
-        let request = NSMutableURLRequest(URL: NSURL(string: url)!)
+    internal func getJson(url: String, parameter: Dictionary<String, String>?, completion: @escaping (Data?, URLResponse?, Error?)->()) -> Void {
+
+
+        //-----------------------------------
+        let request = NSMutableURLRequest(url: URL(string: url)!)
 
         if parameter != nil {
             request.encodeParameters(parameter!)
         }
-
-        let task = self.urlSession.dataTaskWithRequest(request) { data, response, error in
-            completion(data: data, response: response, error: error)
+        let task = self.urlSession.dataTask(with: request as URLRequest) { (data, response, error) in
+            completion(data, response, error)
         }
+
+        //let task = self.urlSession.dataTask(with: request, { data, response, error in
+        //    completion(data, response, error)
+        //})
         task.resume()
     }
 
     // try to parse json or return nil
-    internal func parseJSONObj(JSONData: NSData) -> (NSDictionary?, error: ErrorType?) {
-        var json: NSDictionary?
-        var parseError: ErrorType?
+    internal func parseJSONObj(JSONData: Data) -> ([String: Any]?, error: Error?) {
+        var json: [String: Any] = [:]
+        var parseError: Error?
 
         do {
-            json = try NSJSONSerialization.JSONObjectWithData(JSONData, options: NSJSONReadingOptions.MutableContainers) as? NSDictionary
+            json = try JSONSerialization.jsonObject(with: JSONData, options: JSONSerialization.ReadingOptions.mutableContainers) as! [String: Any]
         } catch {
             parseError = error
         }
@@ -43,12 +49,12 @@ class FSJson {
     }
 
     // try to parse json or return nil
-    internal func parseJSONArr(JSONData: NSData) -> (NSArray?, error: ErrorType?){
-        var json: NSArray?
-        var parseError: ErrorType?
+    internal func parseJSONArr(_ JSONData: Data) -> ([AnyObject]?, error: Error?){
+        var json: [AnyObject]?
+        var parseError: Error?
 
         do {
-            json = try NSJSONSerialization.JSONObjectWithData(JSONData, options: .MutableContainers) as? NSArray
+            json = try JSONSerialization.jsonObject(with: JSONData, options: .mutableContainers) as? [AnyObject]
         } catch {
             parseError = error
         }
@@ -63,20 +69,20 @@ class FSJson {
 
 extension NSMutableURLRequest {
 
-    private func percentEscapeString(string: String) -> String {
-        let characterSet = NSCharacterSet(charactersInString: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._* ")
+    fileprivate func percentEscapeString(_ string: String) -> String {
+        let characterSet = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._* ")
 
         return string
-            .stringByAddingPercentEncodingWithAllowedCharacters(characterSet)!
-            .stringByReplacingOccurrencesOfString(" ", withString: "+", options: [], range: nil)
+            .addingPercentEncoding(withAllowedCharacters: characterSet)!
+            .replacingOccurrences(of: " ", with: "+", options: [], range: nil)
     }
 
-    func encodeParameters(parameters: [String : String]) {
-        HTTPMethod = "POST"
+    func encodeParameters(_ parameters: [String : String]) {
+        httpMethod = "POST"
 
-        HTTPBody = parameters
+        httpBody = parameters
             .map { "\(percentEscapeString($0))=\(percentEscapeString($1))" }
-            .joinWithSeparator("&")
-            .dataUsingEncoding(NSUTF8StringEncoding)
+            .joined(separator: "&")
+            .data(using: String.Encoding.utf8)
     }
 }

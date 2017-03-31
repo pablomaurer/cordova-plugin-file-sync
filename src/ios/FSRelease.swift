@@ -9,11 +9,11 @@ class FSRelease {
     internal var releaseRemote: String = ""
     internal let fsJson = FSJson()
 
-    private let defaults = NSUserDefaults.standardUserDefaults()
+    fileprivate let defaults = UserDefaults.standard
 
     // compare versions
-    internal func compareVersion(remoteVersion: String) -> Bool {
-        if let localVersion = defaults.stringForKey("localVersion") {
+    internal func compareVersion(_ remoteVersion: String) -> Bool {
+        if let localVersion = defaults.string(forKey: "localVersion") {
             return localVersion != remoteVersion
         }
         print("[FileSync] no local version, so the new version is allright")
@@ -27,27 +27,27 @@ class FSRelease {
     }
 
     // check version available
-    internal func isNewVersionAvailable(url: String, completion: (available: Bool?, error: Int?) -> Void) {
-        fsJson.getJson(url, parameter: nil) { (data, response, error) -> () in
+    internal func isNewVersionAvailable(_ url: String, completion: @escaping (Bool?, Int?) -> Void) {
+        fsJson.getJson(url: url, parameter: nil) { (data, response, error) -> () in
 
             // error getting json
             guard error == nil else {
-                completion(available: nil, error: -1)
+                completion(nil, -1)
                 return
             }
 
             // parsing json
-            let(result, error) = self.fsJson.parseJSONObj(data!)
+            let(result, error) = self.fsJson.parseJSONObj(JSONData: data!)
 
             // error parsing json
             guard error == nil else {
-                completion(available: nil, error: -2)
+                completion(nil, -2)
                 return
             }
 
             self.releaseRemote = result!["release"] as! String
             let isNew = self.compareVersion(self.releaseRemote)
-            completion(available: isNew, error: nil)
+            completion(isNew, nil)
         }
     }
 }
