@@ -5,43 +5,49 @@
  */
 class FSManifest {
 
-    private let fsJson = FSJson()
+    fileprivate let fsJson = FSJson()
 
-    private var pathManifestRemote: String
-    private var pathLocal: NSURL
-    private var pathManifestLocal: NSURL
-    private var pathManifestLocalTemp : NSURL
-    private var parameter: Dictionary<String, String>?
+    fileprivate var pathManifestRemote: String
+    fileprivate var pathLocal: URL
+    fileprivate var pathManifestLocal: URL
+    fileprivate var pathManifestLocalTemp : URL
+    fileprivate var parameter: Dictionary<String, String>?
 
-    private var filesToDownload: NSMutableArray = []
-    private var filesToDelete: NSMutableArray = []
-    private var filesToUpload: NSMutableArray = []
+    fileprivate var filesToDownload: [AnyObject] = []
+    fileprivate var filesToDelete: [String] = []
+    fileprivate var filesToUpload: [String] = []
 
-    init(manifestRemote: String, pathLocal: NSURL, parameter: Dictionary<String, String>?) {
+    init(manifestRemote: String, pathLocal: URL, parameter: Dictionary<String, String>?) {
         self.pathLocal = pathLocal
         self.pathManifestRemote = manifestRemote
-        self.pathManifestLocal = NSURL(fileURLWithPath: pathLocal.path! + "/manifest.json")
-        self.pathManifestLocalTemp = NSURL(fileURLWithPath: pathLocal.path! + "/temp-manifest.json")
+        self.pathManifestLocal = URL(fileURLWithPath: pathLocal.path + "/manifest.json")
+        self.pathManifestLocalTemp = URL(fileURLWithPath: pathLocal.path + "/temp-manifest.json")
         self.parameter = parameter
     }
 
-    internal func loadAndCompare(comparedCB: (filesToDownload: NSMutableArray, filesToDelete: NSMutableArray, filesToUpload: NSMutableArray, error:Int?) -> Void) {
+    internal func loadAndCompare(comparedCB: @escaping ([AnyObject], [String], [String], Int?) -> Void) {
         // after we have got the manifest, we finnaly can compare
-        self.loadRemoteManifest() { (remoteManifest: NSArray?, error: Int?) -> () in
+        self.loadRemoteManifest() { (remoteManifest: [AnyObject]?, error: Int?) -> () in
+
+            var localManifest = self.loadLocalManifest()
+            if localManifest == nil {
+                localManifest = [];
+            }
 
             // don't even start comparing, just return empty arrs with an error
-            if error != nil {
-                comparedCB(filesToDownload: self.filesToDownload, filesToDelete: self.filesToDelete, filesToUpload: self.filesToUpload, error:error)
+            if error != nil || remoteManifest == nil {
+                comparedCB(self.filesToDownload, self.filesToDelete, self.filesToUpload, error)
             } else {
-                self.compareManifest(remoteManifest, localManifest: self.loadLocalManifest());
-                comparedCB(filesToDownload: self.filesToDownload, filesToDelete: self.filesToDelete, filesToUpload: self.filesToUpload, error:nil)
+                print("Missing remote or ")
+                self.compareManifest(remoteManifest: remoteManifest!, localManifest: localManifest!);
+                comparedCB(self.filesToDownload, self.filesToDelete, self.filesToUpload, nil)
             }
         }
 
     }
 
-    private func loadRemoteManifest(loadedRemoteManifestCB: (NSArray?, Int?) -> Void) {
-        fsJson.getJson(self.pathManifestRemote, parameter: self.parameter) { (data, response, error) -> () in
+    fileprivate func loadRemoteManifest(_ loadedRemoteManifestCB: @escaping ([AnyObject]?, Int?) -> Void) {
+        fsJson.getJson(url: self.pathManifestRemote, parameter: self.parameter) { (data, response, error) -> () in
             // error getting json
             guard error == nil else {
                 loadedRemoteManifestCB(nil, -3)
@@ -59,7 +65,7 @@ class FSManifest {
             }
 
             // final success callback :)
-            data!.writeToURL(self.pathManifestLocalTemp.filePathURL!, atomically: true)
+            try? data!.write(to: (self.pathManifestLocalTemp as NSURL).filePathURL!, options: [.atomic])
             loadedRemoteManifestCB(arr, nil)
         }
     }
@@ -68,8 +74,8 @@ class FSManifest {
         FSFileSystem.Instance().moveToRoot(self.pathManifestLocalTemp, relativeTo: "manifest.json")
     }
 
-    private func loadLocalManifest() -> NSArray? {
-        let JSONData = NSData(contentsOfURL: self.pathManifestLocal)
+    fileprivate func loadLocalManifest() -> [AnyObject]? {
+        let JSONData = try? Data(contentsOf: self.pathManifestLocal)
 
         // read of manifest returned nil, empty file or what?
         guard JSONData != nil else {
@@ -83,11 +89,11 @@ class FSManifest {
             return nil
         }
 
-        print("LOCAL MANIFEST", JSONArr)
+        print("LOCAL MANIFEST", JSONArr as Any)
         return JSONArr
     }
 
-    private func findNewLocalFiles(localFiles: [String], localManifest: NSArray?) -> [String] {
+    fileprivate func findNewLocalFiles(localFiles: [String], localManifest: [AnyObject]?) -> [String] {
         // print("local files", localFiles)
         // print("local manifest", localManifest)
 
@@ -100,7 +106,7 @@ class FSManifest {
             var found = false
 
             for oldFile in localManifest! {
-                if oldFile["file"] as! String == localFile {
+                if oldFile["file"] as? String == localFile {
                     found = true
                     break
                 }
@@ -115,12 +121,12 @@ class FSManifest {
         return newLocalFiles
     }
 
-    private func findNewRemoteFiles(remoteManifest: NSArray, localManifest: NSArray?) -> NSMutableArray {
+    fileprivate func findNewRemoteFiles(remoteManifest: [AnyObject], localManifest: [AnyObject]?) -> [AnyObject] {
         guard localManifest != nil else {
-            return remoteManifest as! NSMutableArray
+            return remoteManifest
         }
 
-        let newRemoteFiles: NSMutableArray = []
+        var newRemoteFiles:[AnyObject] = []
 
         for newFile in remoteManifest {
             var found = false
@@ -133,7 +139,7 @@ class FSManifest {
             }
 
             if !found {
-                newRemoteFiles.addObject(newFile)
+                newRemoteFiles.append(newFile)
                 print("[FileSync] file added on remote ", newFile)
             }
         }
@@ -141,23 +147,23 @@ class FSManifest {
         return newRemoteFiles
     }
 
-    private func findChangedAndDeletedFiles (remoteManifest: NSArray, localManifest: NSArray?) -> (NSMutableArray, NSMutableArray) {
-        let deletedFiles: NSMutableArray = []
-        let changedFiles: NSMutableArray = []
+    fileprivate func findChangedAndDeletedFiles (remoteManifest: [AnyObject], localManifest: [AnyObject]?) -> ([AnyObject], [String]) {
+        let deletedFiles: [String] = []
+        let changedFiles: [AnyObject] = []
 
         guard localManifest != nil else {
             return (changedFiles, deletedFiles)
         }
 
         // find files deleted or changed on remote
-        for oldFile in localManifest! {
+        for oldFile in localManifest!{
             var isDeleted = true
 
             for newFile in remoteManifest {
                 if oldFile["file"] as! String == newFile["file"] as! String {
                     isDeleted = false
                     if oldFile["hash"] as! String != newFile["hash"] as! String {
-                        self.filesToDownload.addObject(newFile)
+                        self.filesToDownload.append(newFile)
                         print("[FileSync] file change on remote", newFile)
                     }
                     break
@@ -165,7 +171,7 @@ class FSManifest {
             }
 
             if isDeleted {
-                self.filesToDelete.addObject(oldFile["file"] as! String)
+                self.filesToDelete.append(oldFile["file"] as! String)
                 print("[FileSync] file deleted on remote", oldFile)
             }
         }
@@ -173,27 +179,27 @@ class FSManifest {
         return (changedFiles, deletedFiles)
     }
 
-    private func getLocalFiles() -> [String] {
+    fileprivate func getLocalFiles() -> [String] {
         var localFiles: [String] = [];
 
         // sample file for uploading
         let content = "text file content"
-        _ = try? content.writeToFile(self.pathLocal.path! + "/test.txt", atomically: true, encoding: NSUTF8StringEncoding)
-        print("sample file saved under", self.pathLocal.path! + "/test.txt")
+        _ = try? content.write(toFile: self.pathLocal.path + "/test.txt", atomically: true, encoding: String.Encoding.utf8)
+        print("sample file saved under", self.pathLocal.path + "/test.txt")
 
-        let enumerator:NSDirectoryEnumerator = NSFileManager.defaultManager().enumeratorAtURL(self.pathLocal, includingPropertiesForKeys: [NSURLIsDirectoryKey], options: .SkipsHiddenFiles, errorHandler: nil)!
-        while let element = enumerator.nextObject() as? NSURL {
+        let enumerator:FileManager.DirectoryEnumerator = FileManager.default.enumerator(at: self.pathLocal, includingPropertiesForKeys: [URLResourceKey.isDirectoryKey], options: .skipsHiddenFiles, errorHandler: nil)!
+        while let element = enumerator.nextObject() as? URL {
             do {
                 // holy shit -> check if is directory.. isn't there an easier way?
                 var rsrc: AnyObject?
-                try element.getResourceValue(&rsrc, forKey: NSURLIsDirectoryKey)
+                try (element as NSURL).getResourceValue(&rsrc, forKey: URLResourceKey.isDirectoryKey)
                 if let number = rsrc as? NSNumber {
                     if number == 0 {
-                        var subpath = element.path?.stringByReplacingOccurrencesOfString(self.pathLocal.path!, withString: "")
-                        subpath = subpath!.stringByReplacingOccurrencesOfString("/private", withString: "")
-                        subpath = String(subpath!.characters.dropFirst())
+                        var subpath = element.path.replacingOccurrences(of: self.pathLocal.path, with: "")
+                        subpath = subpath.replacingOccurrences(of: "/private", with: "")
+                        subpath = String(subpath.characters.dropFirst())
                         if (subpath != "manifest.json" && subpath != "temp-manifest.json") {
-                            localFiles.append(subpath!)
+                            localFiles.append(subpath)
                         }
                     }
                 }
@@ -205,25 +211,17 @@ class FSManifest {
         return localFiles
     }
 
-    private func compareManifest(remoteManifest: NSArray?, localManifest: NSArray?) {
-        // perf
-        guard remoteManifest != localManifest else {
-            print("remote and local manifest are identical, skip to only find uploads")
-            let localFiles = getLocalFiles()
-            let newLocalFiles = findNewLocalFiles(localFiles, localManifest: localManifest)
-            self.filesToUpload.addObjectsFromArray(newLocalFiles as [AnyObject])
-            return
-        }
+    fileprivate func compareManifest(remoteManifest: [AnyObject], localManifest: [AnyObject]) {
 
         let localFiles = getLocalFiles()
-        let newLocalFiles = findNewLocalFiles(localFiles, localManifest: localManifest)
-        let newRemoteFiles = findNewRemoteFiles(remoteManifest!, localManifest: localManifest)
-        let (changedFiles, deletedFiles) = findChangedAndDeletedFiles(remoteManifest!, localManifest: localManifest)
+        let newLocalFiles = findNewLocalFiles(localFiles: localFiles, localManifest: localManifest)
+        let newRemoteFiles = findNewRemoteFiles(remoteManifest: remoteManifest, localManifest: localManifest)
+        let (changedFiles, deletedFiles) = findChangedAndDeletedFiles(remoteManifest: remoteManifest, localManifest: localManifest)
 
         // better return than passing to global
-        self.filesToUpload.addObjectsFromArray(newLocalFiles as [AnyObject])
-        self.filesToDelete.addObjectsFromArray(deletedFiles as [AnyObject])
-        self.filesToDownload.addObjectsFromArray(newRemoteFiles as [AnyObject])
-        self.filesToDownload.addObjectsFromArray(changedFiles as [AnyObject])
+        self.filesToUpload.append(contentsOf: newLocalFiles)
+        self.filesToDelete.append(contentsOf: deletedFiles)
+        self.filesToDownload.append(contentsOf: newRemoteFiles)
+        self.filesToDownload.append(contentsOf: changedFiles)
     }
 }

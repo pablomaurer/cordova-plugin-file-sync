@@ -1,41 +1,41 @@
 /**
-  * background  http://stackoverflow.com/questions/40920912/why-previous-finish-of-download-fires-after-stop-app-and-running-again?noredirect=1#comment69055651_40920912
-  *
-  * main        https://developer.apple.com/reference/foundation/nsurlsessiondelegate
-  * up/down     https://developer.apple.com/reference/foundation/nsurlsessiontaskdelegate
-  * upload      https://developer.apple.com/reference/foundation/nsurlsessiondatadelegate
-  * download    https://developer.apple.com/reference/foundation/nsurlsessiondownloaddelegate
-  *
-  * task        https://developer.apple.com/reference/foundation/nsurlsessiontask
-  * upload      https://developer.apple.com/reference/foundation/nsurlsessionuploadtask
-  * download
-  *
-**/
+ * background  http://stackoverflow.com/questions/40920912/why-previous-finish-of-download-fires-after-stop-app-and-running-again?noredirect=1#comment69055651_40920912
+ *
+ * main        https://developer.apple.com/reference/foundation/nsurlsessiondelegate
+ * up/down     https://developer.apple.com/reference/foundation/nsurlsessiontaskdelegate
+ * upload      https://developer.apple.com/reference/foundation/nsurlsessiondatadelegate
+ * download    https://developer.apple.com/reference/foundation/nsurlsessiondownloaddelegate
+ *
+ * task        https://developer.apple.com/reference/foundation/nsurlsessiontask
+ * upload      https://developer.apple.com/reference/foundation/nsurlsessionuploadtask
+ * download
+ *
+ **/
 
 class FSLoader {
 
-    internal let session: NSURLSession
+    internal let session: URLSession
     internal var finishedTask: [FSTask]
     internal var startedTask: [FSTask]
 
-    internal init(session: NSURLSession) {
+    internal init(session: URLSession) {
         self.session = session
         self.finishedTask = []
         self.startedTask = []
     }
 
-    internal func handleComplete(task: NSURLSessionTask, error: NSError?) {
+    internal func handleComplete(task: URLSessionTask, error: Error?) {
 
         guard let fsTask = self.removeStartedTask(task) else {
             return
         }
 
         guard error == nil else {
-            self.handleTaskError(fsTask, error: error!)
+            self.handleTaskError(failedTask: fsTask, error: error!)
             return
         }
 
-        self.handleTaskCompleted(fsTask)
+        self.handleTaskCompleted(fsTask: fsTask)
     }
 
     // ---------------------
@@ -45,11 +45,11 @@ class FSLoader {
         self.finishedTask.append(fsTask)
     }
 
-    internal func handleTaskError(failedTask: FSTask, error: NSError) {
+    internal func handleTaskError(failedTask: FSTask, error: Error) {
         print("[FileSync] FSTask completed with error: \(error.localizedDescription)");
         print("[FileSync] FSTask completet with error", failedTask.sessionTask!.originalRequest!)
 
-        let task = self.session.downloadTaskWithURL(failedTask.url)
+        let task = self.session.downloadTask(with: failedTask.url)
         task.taskDescription = failedTask.sessionTask?.taskDescription
 
         if failedTask.restart(task) {
@@ -60,17 +60,17 @@ class FSLoader {
     // ---------------------
     // create, find tasks
     // ---------------------
-    internal func getIndexOfActiveTask(task: NSURLSessionTask) -> Int? {
-        for (index, startedTask) in self.startedTask.enumerate() {
-            if startedTask.sessionTask?.taskIdentifier == task.taskIdentifier {
+    internal func getIndexOfActiveTask(taskToFind: URLSessionTask) -> Int? {
+        for (index, startedTask) in self.startedTask.enumerated() {
+            if startedTask.sessionTask?.taskIdentifier == taskToFind.taskIdentifier {
                 return index
             }
         }
         return nil
     }
 
-    internal func getStartedTask(task: NSURLSessionTask) -> FSTask? {
-        guard let index = getIndexOfActiveTask(task) else {
+    internal func getStartedTask(_ task: URLSessionTask) -> FSTask? {
+        guard let index = getIndexOfActiveTask(taskToFind: task) else {
             print("[FileSync] failed fs-task not found in startedTasks (IMPOSSIBLE)", task.originalRequest!)
             return nil
         }
@@ -78,23 +78,23 @@ class FSLoader {
     }
 
 
-    internal func removeStartedTask(task: NSURLSessionTask) -> FSTask?{
-        guard let index = getIndexOfActiveTask(task) else {
+    internal func removeStartedTask(_ task: URLSessionTask) -> FSTask?{
+        guard let index = getIndexOfActiveTask(taskToFind: task) else {
             print("[FileSync] failed fs-task not found in startedTasks (IMPOSSIBLE)", task.originalRequest!)
             return nil
         }
         let task = self.startedTask[index]
-        self.startedTask.removeAtIndex(index)
+        self.startedTask.remove(at: index)
         return task
     }
 
-    internal func removeFinishedTask(task: NSURLSessionTask) -> FSTask?{
-        guard let index = getIndexOfActiveTask(task) else {
+    internal func removeFinishedTask(_ task: URLSessionTask) -> FSTask?{
+        guard let index = getIndexOfActiveTask(taskToFind: task) else {
             print("[FileSync] failed fs-task not found in finishedTasks (IMPOSSIBLE)", task.originalRequest!)
             return nil
         }
         let task = self.finishedTask[index]
-        self.finishedTask.removeAtIndex(index)
+        self.finishedTask.remove(at: index)
         return task
     }
 

@@ -12,19 +12,19 @@
  *
  **/
 
-class FSSession: NSObject, NSURLSessionTaskDelegate, NSURLSessionDelegate, NSURLSessionDownloadDelegate {
+class FSSession: NSObject, URLSessionTaskDelegate, URLSessionDelegate, URLSessionDownloadDelegate {
 
-    var sessionConfig: NSURLSessionConfiguration = NSURLSessionConfiguration.backgroundSessionConfigurationWithIdentifier("com.amanninformatik.ner.backgroundLoader")
-    var session: NSURLSession? = nil
+    var sessionConfig: URLSessionConfiguration = URLSessionConfiguration.background(withIdentifier: "com.amanninformatik.ner.backgroundLoader")
+    var session: Foundation.URLSession? = nil
 
     var fsDownloader: FSDownloader? = nil
     var fsUploader: FSUploader? = nil
-    var cb: (result: Int) -> Void = { arg in }
+    var cb: (Int) -> Void = { arg in }
 
-    private override init() {
+    fileprivate override init() {
         super.init()
         self.sessionConfig.sessionSendsLaunchEvents = true
-        self.session = NSURLSession(configuration: self.sessionConfig, delegate: self, delegateQueue: nil)
+        self.session = Foundation.URLSession(configuration: self.sessionConfig, delegate: self, delegateQueue: nil)
 
         self.fsDownloader = FSDownloader(session: self.session!)
         self.fsUploader = FSUploader(session: self.session!)
@@ -35,51 +35,48 @@ class FSSession: NSObject, NSURLSessionTaskDelegate, NSURLSessionDelegate, NSURL
     }
     static let instance: FSSession = FSSession()
 
-    internal func setCB(completion: (result: Int)->()) -> Void {
+    internal func setCB(_ completion: @escaping (Int)->()) -> Void {
         self.cb = completion
     }
 
     // DID FINISH IN BACKGROUND
-    internal func URLSessionDidFinishEventsForBackgroundURLSession(session: NSURLSession) {
+    internal func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
         print("[FileSync] finished tasks while in background")
     }
 
     // UPLOAD / DOWNLOAD FINISH
-    internal func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
+    internal func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
 
         guard let type = task.taskDescription else {
             print("[FileSync] ERROR: we used task.taskDescription to know if its a down- or upload but it's missing")
             return
         }
 
-        // print("finishid task", type)
-        // print("finishid task", task.originalRequest?.URL)
-
         if type == "download" {
-            self.fsDownloader!.handleComplete(task, error: error)
+            self.fsDownloader!.handleComplete(task: task, error: error)
         } else if type == "upload" {
-           self.fsUploader!.handleComplete(task, error: error)
+            self.fsUploader!.handleComplete(task: task, error: error)
         }
 
-        print(self.fsUploader?.startedTask, self.fsDownloader?.startedTask)
+        print(self.fsUploader?.startedTask as Any, self.fsDownloader?.startedTask as Any)
         if (self.fsUploader?.startedTask.count)! == 0 && (self.fsDownloader?.startedTask.count)! == 0 {
-            self.cb(result: 0)
+            self.cb(0)
         }
 
     }
 
     // DOWNLOAD FINISH
-    internal func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didFinishDownloadingToURL location: NSURL) {
-        self.fsDownloader!.handleDownloadFinished(downloadTask, downloadLocation: location)
+    internal func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        self.fsDownloader!.handleDownloadFinished(downloadTask: downloadTask, downloadLocation: location)
     }
 
     // DOWNLOAD PROGRESS
-    internal func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+    internal func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         // not needed, counting files should be enough
     }
 
     // UPLOAD PROGRESS
-    internal func URLSession(session: NSURLSession, task: NSURLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+    internal func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
         // not needed, counting files should be enough
     }
 }
