@@ -71,7 +71,7 @@ class FSManifest {
     }
 
     internal func saveNewManifest() -> Void {
-        FSFileSystem.Instance().moveToRoot(self.pathManifestLocalTemp, relativeTo: "manifest.json")
+        FSFileSystem.Instance().moveToRoot(from: self.pathManifestLocalTemp, relativeTo: "manifest.json")
     }
 
     fileprivate func loadLocalManifest() -> [AnyObject]? {
@@ -89,13 +89,10 @@ class FSManifest {
             return nil
         }
 
-        print("LOCAL MANIFEST", JSONArr as Any)
         return JSONArr
     }
 
     fileprivate func findNewLocalFiles(localFiles: [String], localManifest: [AnyObject]?) -> [String] {
-        // print("local files", localFiles)
-        // print("local manifest", localManifest)
 
         guard localManifest != nil else {
             return localFiles
@@ -181,11 +178,6 @@ class FSManifest {
 
     fileprivate func getLocalFiles() -> [String] {
         var localFiles: [String] = [];
-
-        // sample file for uploading
-        let content = "text file content"
-        _ = try? content.write(toFile: self.pathLocal.path + "/test.txt", atomically: true, encoding: String.Encoding.utf8)
-        print("sample file saved under", self.pathLocal.path + "/test.txt")
 
         let enumerator:FileManager.DirectoryEnumerator = FileManager.default.enumerator(at: self.pathLocal, includingPropertiesForKeys: [URLResourceKey.isDirectoryKey], options: .skipsHiddenFiles, errorHandler: nil)!
         while let element = enumerator.nextObject() as? URL {

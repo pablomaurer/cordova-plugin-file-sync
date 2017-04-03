@@ -10,7 +10,7 @@ class FSDownloader: FSLoader {
         }
 
         // optional check hash, to enshure correct loading
-        FSFileSystem.Instance().moveToRoot(downloadLocation, relativeTo: fsDownloadTask.localPath)
+        FSFileSystem.Instance().moveToRoot(from: downloadLocation, relativeTo: fsDownloadTask.localPath)
     }
 
     internal func startDownloads(files: [AnyObject], remoteBaseUrl: URL) {

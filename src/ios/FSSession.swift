@@ -58,7 +58,6 @@ class FSSession: NSObject, URLSessionTaskDelegate, URLSessionDelegate, URLSessio
             self.fsUploader!.handleComplete(task: task, error: error)
         }
 
-        print(self.fsUploader?.startedTask as Any, self.fsDownloader?.startedTask as Any)
         if (self.fsUploader?.startedTask.count)! == 0 && (self.fsDownloader?.startedTask.count)! == 0 {
             self.cb(0)
         }

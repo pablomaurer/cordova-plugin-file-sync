@@ -19,7 +19,7 @@ class FSMain {
 
         // setup filesystem (must be done, before something uses this singleton)
         self.fileSystem = FSFileSystem.Instance()
-        self.fileSystem.setup(jsOptions["pathLocalDir"])
+        self.fileSystem.setup(pathRoot: jsOptions["pathLocalDir"])
 
         self.remoteDir = URL(string: jsOptions["pathRemoteDir"]!)!
         self.pathUpload = URL(string: (jsOptions["pathUpload"])!)!
