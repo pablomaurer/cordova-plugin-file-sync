@@ -20,8 +20,7 @@ cordova plugin add cordova-plugin-file-sync
 // development
 cordova plugin add `github repo`
 ```
-It will also install `cordova-plugin-add-swift-support` automatically which is needed.
-In `config.xml` add `<preference name="UseLegacySwiftLanguageVersion" value="true" />`
+This plugins depends on `cordova-plugin-add-swift-support` which will get installed automatically.
 
 ### Why?
 Reasons:
