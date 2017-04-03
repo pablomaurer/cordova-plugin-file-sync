@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-file-sync",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "cordova plugin to sync files from remote server to ios via manifest comparing",
   "main": "echo \"Error: This is a cordova plugin, no need to run this via npm ;) \" && exit 1",
   "cordova": {
