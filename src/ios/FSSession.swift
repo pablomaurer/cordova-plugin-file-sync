@@ -14,7 +14,8 @@
 
 class FSSession: NSObject, URLSessionTaskDelegate, URLSessionDelegate, URLSessionDownloadDelegate {
 
-    var sessionConfig: URLSessionConfiguration = URLSessionConfiguration.background(withIdentifier: "com.amanninformatik.ner.backgroundLoader")
+    //var sessionConfig: URLSessionConfiguration = URLSessionConfiguration.background(withIdentifier: "com.amanninformatik.ne.backgroundLoad")
+    var sessionConfig: URLSessionConfiguration = URLSessionConfiguration.default
     var session: Foundation.URLSession? = nil
 
     var fsDownloader: FSDownloader? = nil
@@ -23,17 +24,29 @@ class FSSession: NSObject, URLSessionTaskDelegate, URLSessionDelegate, URLSessio
 
     fileprivate override init() {
         super.init()
-        self.sessionConfig.sessionSendsLaunchEvents = true
-        self.session = Foundation.URLSession(configuration: self.sessionConfig, delegate: self, delegateQueue: nil)
-
-        self.fsDownloader = FSDownloader(session: self.session!)
-        self.fsUploader = FSUploader(session: self.session!)
     }
 
     internal static func Instance() -> FSSession {
         return instance
     }
     static let instance: FSSession = FSSession()
+
+    internal func setup(user: String? = nil, pass: String? = nil) {
+        if (user != nil && pass != nil) {
+            let loginString = String(format: "%@:%@", user!, pass!)
+            let loginData = loginString.data(using: String.Encoding.utf8)!
+            let base64LoginString = loginData.base64EncodedString()
+
+            let authString = "Basic \(base64LoginString)"
+            self.sessionConfig.httpAdditionalHeaders = ["Authorization" : authString]
+        }
+
+        //self.sessionConfig.sessionSendsLaunchEvents = true
+        self.session = Foundation.URLSession(configuration: self.sessionConfig, delegate: self, delegateQueue: nil)
+
+        self.fsDownloader = FSDownloader(session: self.session!)
+        self.fsUploader = FSUploader(session: self.session!)
+    }
 
     internal func setCB(_ completion: @escaping (Int)->()) -> Void {
         self.cb = completion

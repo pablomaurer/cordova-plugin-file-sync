@@ -7,7 +7,6 @@ import MobileCoreServices
 class FSUploader: FSLoader {
 
     internal func startUploads(files: [String], pathLocal: URL, pathUpload: URL, optionalParams: Dictionary<String, String>?) {
-
         for item in files {
             let item = item
             let localFilePath = URL(fileURLWithPath: pathLocal.path + "/" + item)
@@ -31,7 +30,7 @@ class FSUploader: FSLoader {
             task.taskDescription = "upload"
             let fsTask = FSTask(url: localFilePath, localPath: item, sessionTask: task)
             fsTask.start()
-            self.startedTask.append(fsTask)
+            self.startedTask[task.taskIdentifier] = fsTask
         }
     }
 

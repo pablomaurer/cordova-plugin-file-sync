@@ -15,16 +15,19 @@
 class FSLoader {
 
     internal let session: URLSession
-    internal var finishedTask: [FSTask]
-    internal var startedTask: [FSTask]
+    internal var finishedTask: [Int:FSTask]
+    internal var startedTask: [Int:FSTask]
 
     internal init(session: URLSession) {
         self.session = session
-        self.finishedTask = []
-        self.startedTask = []
+        self.finishedTask = [:]
+        self.startedTask = [:]
     }
 
     internal func handleComplete(task: URLSessionTask, error: Error?) {
+
+        print("[FileSync] started tasks", self.startedTask.count)
+        print("[FileSync] finished tasks", self.finishedTask.count)
 
         guard let fsTask = self.removeStartedTask(task) else {
             return
@@ -42,7 +45,7 @@ class FSLoader {
     // task complete/error
     // ---------------------
     internal func handleTaskCompleted(fsTask: FSTask) {
-        self.finishedTask.append(fsTask)
+        self.finishedTask[(fsTask.sessionTask?.taskIdentifier)!] = fsTask
     }
 
     internal func handleTaskError(failedTask: FSTask, error: Error) {
@@ -53,41 +56,37 @@ class FSLoader {
         task.taskDescription = failedTask.sessionTask?.taskDescription
 
         if failedTask.restart(task) {
-            self.startedTask.append(failedTask)
+            self.startedTask[(failedTask.sessionTask?.taskIdentifier)!] = failedTask
         }
     }
 
     // ---------------------
     // create, find tasks
     // ---------------------
-    internal func getIndexOfActiveTask(taskToFind: URLSessionTask) -> Int? {
-        for (index, startedTask) in self.startedTask.enumerated() {
-            if startedTask.sessionTask?.taskIdentifier == taskToFind.taskIdentifier {
-                return index
+    /* not needed anymore
+    internal func getStartedTask(_ task: URLSessionTask) -> String? {
+        var found: String?
+        for (_,value) in self.startedTask {
+            if (value.sessionTask?.taskIdentifier == task.taskIdentifier) {
+                found = value.localPath
+                break
             }
         }
-        return nil
+        return found
     }
-
-    internal func getStartedTask(_ task: URLSessionTask) -> FSTask? {
-        guard let index = getIndexOfActiveTask(taskToFind: task) else {
-            print("[FileSync] failed fs-task not found in startedTasks (IMPOSSIBLE)", task.originalRequest!)
-            return nil
-        }
-        return self.startedTask[index]
-    }
+     */
 
 
     internal func removeStartedTask(_ task: URLSessionTask) -> FSTask?{
-        guard let index = getIndexOfActiveTask(taskToFind: task) else {
-            print("[FileSync] failed fs-task not found in startedTasks (IMPOSSIBLE)", task.originalRequest!)
-            return nil
-        }
-        let task = self.startedTask[index]
-        self.startedTask.remove(at: index)
-        return task
+        //print("[FileSync] remove started task", task)
+
+        let fsTask = self.startedTask[task.taskIdentifier]
+        self.startedTask.removeValue(forKey: task.taskIdentifier)
+
+        return fsTask
     }
 
+    /* not needed...
     internal func removeFinishedTask(_ task: URLSessionTask) -> FSTask?{
         guard let index = getIndexOfActiveTask(taskToFind: task) else {
             print("[FileSync] failed fs-task not found in finishedTasks (IMPOSSIBLE)", task.originalRequest!)
@@ -97,6 +96,7 @@ class FSLoader {
         self.finishedTask.remove(at: index)
         return task
     }
+    */
 
     // used startUploads and startDownloads instead
     internal func startTasks() -> FSTask {

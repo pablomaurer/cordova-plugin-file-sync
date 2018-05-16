@@ -9,7 +9,7 @@ class FSMain {
     fileprivate let release: FSRelease
     fileprivate let manifest: FSManifest
     fileprivate var pluginResultCB: (Int) -> Void = { arg in }
-    fileprivate let remoteDir: URL
+    fileprivate var remoteDir: URL
     fileprivate let pathUpload: URL
     fileprivate let fsSession: FSSession
     fileprivate let reqParameter: Dictionary<String, String>?
@@ -27,6 +27,20 @@ class FSMain {
         self.release = FSRelease()
         self.manifest = FSManifest(manifestRemote: jsOptions["pathManifest"]!, pathLocal: self.fileSystem.pathRoot, parameter: reqParamater)
         self.fsSession = FSSession.Instance()
+
+        // if url with basic auth
+        if (remoteDir.absoluteString.split(separator: "@").count == 2) {
+            let user = self.remoteDir.user!
+            let password = self.remoteDir.password!
+            let urlWithoutAuth: String = "https://" + String(remoteDir.absoluteString.split(separator: "@").last!)
+            self.remoteDir = URL(string: urlWithoutAuth)!
+            print("[FileSync] using non secure url")
+            self.fsSession.setup(user: user, pass: password)
+        } else {
+            print("[FileSync] using basic auth url")
+            self.fsSession.setup()
+        }
+
         self.fsSession.setCB(self.handleNetworkRequestsComplete)
 
         // CHECK IF ALREADY WORKING, IF NOT START
