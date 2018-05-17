@@ -96,34 +96,7 @@ To be more flexible you alway can generate the `serverside json` via `php` or wh
 
 ----
 
-### chcp (cordova-hot-code-push) and locations
-Some filesystem and how to use it with chcp explanations, although you can use it without chcp-plugin.
-- On `first startup` with `chcp` plugin you are in:
-```
-todo
-```
-
-- On `sencod startup` with `chcp` plguin you are in:
-```
-file:///Users/pm/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<UDID>/Library/Application Support/<com.company.yourapp>/cordova-plugin-hot-code-push/<chcp-version>/www
-```
-So since the location will change you should not use relative pathes to get the synced files.
-- The synced files will by default be saved to
-```
-file:///Users/pm/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<UDID>/Library/Application Support/cordova-plugin-file-sync/
-```
-So to create your absolute pathes on js side you could do:
-```js
-// using cordova-plugin-file
-resolveLocalFileSystemURL('cdvfile://localhost/library/Application Support/cordova-plugin-file-sync', function(entry) {
-    console.log('library: ' + entry.toURL());
-// file:///Users/pm/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<UDID>/Library/Application Support/cordova-plugin-file-sync
-});
-```
 ### Todo
-Although there are todo's this plugin is `production ready`, but I never used it with a app in the appstore apple will may find something that isn't alright so I would be happy about feedback if it worked or not.
-
-Also since it's swift it's a bit more beginner friendly and I'm here for helping you, when you try to contribute.
 
 **Core Features:**
 - [x] uses backgroundmode
@@ -144,13 +117,10 @@ Also since it's swift it's a bit more beginner friendly and I'm here for helping
 - [ ] resume download if you where aborted, due to exit. background doesn't matter, because the download would still go on.
 - [ ] return more for example: numUploadedFiles, numDownloadedFiles, numDeletedFiles, newVersion,  oldVersion. more ideas?
 
-**Qualtiy:**
+**Qualitiy:**
 - [x] Error handling in Downloader
 - [x] currently the most errors are just surrounded with if else but not returned
-- [ ] migrate to swift 3
+- [x] migrate to swift 3
 - [x] avoid conflicts with other plugins using for every class a named prefix
-- [ ] instead of returning status via int, use enum/constants like [chcp errors](https://github.com/nordnet/cordova-hot-code-push/wiki/Error-codes)
 - [x] what/which code is causing the thread warning of 15ms? maybe the comparing of the manifests?
-
-### Feelings and why swift? :P 
-Because i had no idea of `Obj-c` but the syntax looked really strange I wanted instead to try out `swift`. For me starting native developmen `swift` had a bit a easier syntax but it seems not so complete and there are less libs available. Also I really hate to use `callback` instead `js like promises`, although there are libs for that available, I didn't want to use them in such a small project.
+- [ ] instead of returning status via int, use enum/constants like [chcp errors](https://github.com/nordnet/cordova-hot-code-push/wiki/Error-codes)
